@@ -1,0 +1,75 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_NeoPixel.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+#define MATRIX_PIN 7
+#define LED_COUNT 25
+Adafruit_NeoPixel matrix = Adafruit_NeoPixel(LED_COUNT, MATRIX_PIN, NEO_GRB + NEO_KHZ800);
+
+#define LED_GREEN 11
+#define LED_BLUE 12
+
+#define BUTTON_A 5
+#define BUTTON_B 6
+
+volatile bool greenState = false;
+volatile bool blueState = false;
+
+void IRAM_ATTR toggleGreenLED() {
+    greenState = !greenState;
+    digitalWrite(LED_GREEN, greenState);
+    displayMessage("LED Verde: " + String(greenState ? "ON" : "OFF"));
+    Serial.println("Botao A pressionado - LED Verde " + String(greenState ? "Ligado" : "Desligado"));
+}
+
+void IRAM_ATTR toggleBlueLED() {
+    blueState = !blueState;
+    digitalWrite(LED_BLUE, blueState);
+    displayMessage("LED Azul: " + String(blueState ? "ON" : "OFF"));
+    Serial.println("Botao B pressionado - LED Azul " + String(blueState ? "Ligado" : "Desligado"));
+}
+
+void displayMessage(String msg) {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 10);
+    display.println(msg);
+    display.display();
+}
+
+void setup() {
+    Serial.begin(115200);
+    Wire.begin();
+    
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println("SSD1306 não encontrado!");
+        while (true);
+    }
+    display.clearDisplay();
+    display.display();
+    
+    matrix.begin();
+    matrix.show();
+    
+    pinMode(LED_GREEN, OUTPUT);
+    pinMode(LED_BLUE, OUTPUT);
+    pinMode(BUTTON_A, INPUT_PULLUP);
+    pinMode(BUTTON_B, INPUT_PULLUP);
+    
+    attachInterrupt(digitalPinToInterrupt(BUTTON_A), toggleGreenLED, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BUTTON_B), toggleBlueLED, FALLING);
+}
+
+void loop() {
+    if (Serial.available()) {
+        char receivedChar = Serial.read();
+        displayMessage(String(receivedChar));
+    }
+}
