@@ -1,0 +1,79 @@
+#include <Adafruit_GFX.h>
+
+class GFXcanvas8 : public Adafruit_GFX {
+  public:
+    uint8_t *buffer; ///< Raster data: no longer private, allow subclass access
+
+    // Construtor para a classe GFXcanvas8
+    GFXcanvas8(uint16_t w, uint16_t h) : Adafruit_GFX(w, h) {
+        // Alocar o buffer de dados raster (com uma largura * altura de pixels)
+        buffer = (uint8_t *)malloc(w * h / 8); // Aqui estamos assumindo que cada pixel ocupa 1 bit
+    }
+
+    // Destruidor para liberar a memória do buffer
+    ~GFXcanvas8() {
+        if (buffer) {
+            free(buffer);
+        }
+    }
+
+    // Função para preencher o buffer com um valor
+    void clearBuffer() {
+        memset(buffer, 0, _width * _height / 8);
+    }
+
+    // Função para desenhar no buffer (exemplo)
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override {
+        if (x < 0 || x >= _width || y < 0 || y >= _height) return;
+        
+        // Lógica para desenhar no buffer de 8 bits por pixel
+        int byteIndex = (y * _width + x) / 8;
+        int bitIndex = x % 8;
+        if (color) {
+            buffer[byteIndex] |= (1 << bitIndex);
+        } else {
+            buffer[byteIndex] &= ~(1 << bitIndex);
+        }
+    }
+
+    // Função para exibir o buffer (esta função precisa ser implementada conforme a tela utilizada)
+    void display() {
+        // Aqui você pode implementar o código necessário para enviar o buffer para o display
+    }
+};
+
+class GFXcanvas16 : public Adafruit_GFX {
+  public:
+    uint16_t *buffer; ///< Raster data: no longer private, allow subclass access
+
+    // Construtor para a classe GFXcanvas16
+    GFXcanvas16(uint16_t w, uint16_t h) : Adafruit_GFX(w, h) {
+        // Alocar o buffer de dados raster (com uma largura * altura de pixels)
+        buffer = (uint16_t *)malloc(w * h * sizeof(uint16_t)); // Cada pixel é 16 bits (2 bytes)
+    }
+
+    // Destruidor para liberar a memória do buffer
+    ~GFXcanvas16() {
+        if (buffer) {
+            free(buffer);
+        }
+    }
+
+    // Função para preencher o buffer com um valor
+    void clearBuffer() {
+        memset(buffer, 0, _width * _height * sizeof(uint16_t));
+    }
+
+    // Função para desenhar no buffer (exemplo)
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override {
+        if (x < 0 || x >= _width || y < 0 || y >= _height) return;
+        
+        // Lógica para desenhar no buffer de 16 bits por pixel
+        buffer[y * _width + x] = color;
+    }
+
+    // Função para exibir o buffer (esta função precisa ser implementada conforme a tela utilizada)
+    void display() {
+        // Aqui você pode implementar o código necessário para enviar o buffer para o display
+    }
+};
